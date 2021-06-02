@@ -1,0 +1,5 @@
+#ignore
+
+#don't ignore
+*.asv
+*.swp
