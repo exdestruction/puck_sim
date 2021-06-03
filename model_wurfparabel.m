@@ -3,7 +3,7 @@ g = 9.80665;
 del_t = 0.005;
 k = 0;
 n = 134;
-random = randi([-10, 10], n, 1);
+random = randi([-5, 5], n, 1);
 %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
 %Fuer ideales System
 t = 0;
@@ -21,10 +21,12 @@ vy_ideal = vy_0;
 %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
 %Fuer Kalman Filter
 Mat_K = zeros(4,4);
+
 %Startschaetzung
 Mat_Pm = [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1];
 Mat_R = [0.01 0; 0 0.01];
 Mat_H = [1 0 0 0; 0 1 0 0];
+
 %Startschaetzung
 Vec_Xm = [0 0 1 1].' ;
 Array_Xm = zeros(4, n+1);
@@ -59,40 +61,40 @@ for k = 1:n
     rand = (random(k)/100);
     Vec_Y(2) = y_ideal(k) + rand;
     
-    %Wurfparabel mit Stoerung
-    if (0.7 < x_ideal(k) && x_ideal(k)<0.8)
-        Vec_Y(2) = 0.1 + rand;
-        Mat_R(1) = 1;
-        Mat_R(4) = 1;
-    else
-        Mat_R(1)=0.01;
-        Mat_R(4)=0.01;
-    end
+%     %Wurfparabel mit Stoerung
+%     if (0.7 < x_ideal(k) && x_ideal(k)<0.8)
+%         Vec_Y(2) = 0.1 + rand;
+%         Mat_R(1) = 1;
+%         Mat_R(4) = 1;
+%     else
+%         Mat_R(1)=0.01;
+%         Mat_R(4)=0.01;
+%     end
     
-    %Ende Wurfparabel mit Stoerung
-    if(Vec_Y(2)<0)
-        Vec_Y(2) = 0;
-    end
-    x_mes(k) = Vec_Y(1);
-    y_mes(k) = Vec_Y(2);
-    
-    %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
-    %Korrektur mit der Messung
-    Inverse = inv(Mat_R + Mat_H * Mat_Pm * Mat_H');
-    Mat_K = Mat_Pm * Mat_H' * Inverse;
-    Vec_Xp = Vec_Xm + Mat_K * (Vec_Y - Mat_H * Vec_Xm);
-    Mat_Pp = (Mat_I - Mat_K * Mat_H) * Mat_Pm;
-    
-    %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
-    %Prädiktion
-    Vec_Xm = Mat_A * Vec_Xp + Mat_B * Vec_u;
-    Array_Xm((k*4) + 1) = Vec_Xm(1);
-    Array_Xm((k*4) + 2) = Vec_Xm(2);
-    Array_Xm((k*4) + 3) = Vec_Xm(3);
-    Array_Xm((k*4) + 4) = Vec_Xm(4);
-    x_kal(k) = Vec_Xm(1);
-    y_kal(k) = Vec_Xm(2);
-    Mat_Pm = Mat_A * Mat_Pp * Mat_A' + Mat_Q;
+%     %Ende Wurfparabel mit Stoerung
+%     if(Vec_Y(2)<0)
+%         Vec_Y(2) = 0;
+%     end
+%     x_mes(k) = Vec_Y(1);
+%     y_mes(k) = Vec_Y(2);
+%     
+%     %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+%     %Korrektur mit der Messung
+%     Inverse = inv(Mat_R + Mat_H * Mat_Pm * Mat_H');
+%     Mat_K = Mat_Pm * Mat_H' * Inverse;
+%     Vec_Xp = Vec_Xm + Mat_K * (Vec_Y - Mat_H * Vec_Xm);
+%     Mat_Pp = (Mat_I - Mat_K * Mat_H) * Mat_Pm;
+%     
+%     %−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
+%     %Prädiktion
+%     Vec_Xm = Mat_A * Vec_Xp + Mat_B * Vec_u;
+%     Array_Xm((k*4) + 1) = Vec_Xm(1);
+%     Array_Xm((k*4) + 2) = Vec_Xm(2);
+%     Array_Xm((k*4) + 3) = Vec_Xm(3);
+%     Array_Xm((k*4) + 4) = Vec_Xm(4);
+%     x_kal(k) = Vec_Xm(1);
+%     y_kal(k) = Vec_Xm(2);
+%     Mat_Pm = Mat_A * Mat_Pp * Mat_A' + Mat_Q;
 end
 %ideal
 subplot(2,1,1);
