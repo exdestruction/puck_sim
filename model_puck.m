@@ -1,12 +1,10 @@
 clear;
-
-
 d_t = 0.01;
 t_sim = 10; % [s]
 sim_steps = round(t_sim / d_t);
 noise = randi([-5, 5], 2, sim_steps);
 noise = noise / 120;
-
+% noise = randi([0, 0], 2, sim_steps)
 %physical parameters
 width = 1.5; %[m]
 length = 2; %[m]
@@ -21,7 +19,7 @@ t = 0;
 x_0 = length/10; % [m]
 y_0 = width/2; % [m]
 v0 = 1; % m/s
-alpha = (pi/180) * (-38.9); % [rad] angle to x-axis
+alpha = (pi/180) * (41.4); % [rad] angle to x-axis
 
 v_x0 = v0 * cos(alpha);
 v_y0 = v0 * sin(alpha);
@@ -72,7 +70,7 @@ X_predicted = [0 0 0 0].'; % state of the system after prediction step, mu_hat
 X_corrected = [0 0 0 0].'; % state of the system after correction step, mu
 K_mat = zeros(4,4); %Kalman matrix
 Q_mat = [0.01 0; 0 0.01]; % variance matrix of measurenemts error
-R_mat = [0.00001 0 0 0;0 0.00001 0 0;0 0 0.00001 0; 0 0 0 0.00001]; %covariance matrix 
+R_mat = [0.00001 0 0 0;0 0.00001 0 0;0 0 0.001 0; 0 0 0 0.001]; %covariance matrix 
 P_predicted = diag([1 1 1 1]); % covariance matrix (not measurement's error), sigma_hat matrix
 I_mat = diag([1 1 1 1]);
 
