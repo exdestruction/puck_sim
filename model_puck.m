@@ -57,8 +57,9 @@ w = Q * sin(phi) / r;
 
 Q_dot =@(phi) -((cos(phi)).^2 .* p_parall_res(fix(phi/0.01)+1) ...
 	+ (sin(phi)).^2 .* p_omega_res(fix(phi/0.01)+1))* J;
-phi_dot =@(phi) sin(phi) .* cos(phi) .* (p_parall(phi) - p_omega(phi)) .* J ./ Q;
-psi_dot =@(phi) -sin(phi) .* p_orth(phi) .* J ./ Q(phi);
+phi_dot =@(phi) sin(phi) .* cos(phi) .* (p_parall_res(fix(phi/0.01)+1) ...
+	- p_omega_res(fix(phi/0.01)+1)) .* J;
+psi_dot =@(phi) -sin(phi) .* p_orth_res(fix(phi/0.01)+1) .* J;
 
 
 %Initial conditions, ideal System
@@ -66,36 +67,75 @@ t = 0;
 x_0 = length_table/10; % [m]
 y_0 = width_table/2; % [m]
 
-psi_0 = (pi/180) * (41.4); % [rad] angle to x-axis
-
- 
-% components of motion laws when type D trajectory
-phi_0 = 0.975 + (0.992 - 0.975) * delta;
-
 v_0 = 1; % m/s
+psi_0 = (pi/180) * (41.4); % [rad] angle to x-axis
 v_x0 = v_0 * cos(psi_0);
 v_y0 = v_0 * sin(psi_0);
 
 w_0 = tan(phi_0) * v_0 / r; % rad/s
 
+ 
+% components of motion laws when type D trajectory
+phi_0 = 0.975 + (0.992 - 0.975) * delta;
+
+
+
 phi_start = atan(r * w_0 / v_0);
 Q_0 = v_0 / cos(phi_start);
 
-%find all Q
-Q = [];
-for step = 1:sim_steps
-	Q = [Q ; integral(Q_dot, 0, step * dt)];
-end
+% %find all Q
+% Q = Q_0;
+% for step = 1:sim_steps
+% 	Q_prev = Q(end);
+% 	Q_next = integral(@(dt) Q_dot(phi_start) * dt, 0, step*d_t) + Q_0;
+% 	if Q_next < 0
+% 		break
+% 	end
+% 	Q = [Q ; Q_next];
+% end
+% 
+% %find all psi
+% psi = psi_0;
+% for step = 1:sim_steps
+% % 	Q_prev = Q(end);
+% 	psi_next = integral(@(dt) psi_dot(phi_start)/Q(step) * dt, 0, step*d_t) + psi_0;
+% 	if psi_next < 0
+% 		break
+% 	end
+% 	psi = [psi ; psi_next];
+% end
 
 
-X_vec = zeros(2, sim_steps);
+X_vec = zeros(4, sim_steps);
 X_vec(:, 1) = [x_0, y_0, v_x0, v_y0].';
 A_mat = [1 0 dt 0; 0 1 0 dt]; 
 % U_vec = [];
 % B_mat = [];
 
 %simulation ideal system trajectory
+Q = Q_0;
+psi = psi_0;
+phi = phi_start;
 for step = 1:sim_steps
+	Q_next = integral(@(dt) Q_dot(phi_start) * dt, 0, step*d_t) + Q_0;
+	
+	%stop if v < 0
+	if Q < 0
+		X_vec(3, step + 1 ) = 0;
+		X_vec(4, step + 1 ) = 0;
+		U_vec = [0;0];
+	end
+
+	Q = [Q; Q_next];
+	psi_next = integral(@(dt) psi_dot(phi_start)/Q(step) * dt, 0, step*d_t) + psi_0;
+	psi = [psi ; psi_next];
+	
+	v_x = Q_next .* cos(phi) .* cos(psi);
+	v_y = Q_next .* cos(phi) .* sin(psi);
+	
+	x = X_vec(1, step + 1) + integral(@(dt) v_x * dt, step*d_t, (step+1)*d_t);
+	y = X_vec(2, step + 1) + integral(@(dt) v_y * dt, step*d_t, (step+1)*d_t);
+	
 %     X_vec(:, step + 1) = A_mat * X_vec(:, step) + B_mat * U_vec;
 	X_vec(:, step + 1) = A_mat * X_vec(:, step);
 	
